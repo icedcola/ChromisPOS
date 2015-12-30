@@ -26,7 +26,10 @@ report.setSentence("SELECT " +
                 "PEOPLE.NAME, " +
                 "SHIFTS.STARTSHIFT, " +
                 "SHIFTS.ENDSHIFT, " +
-                "({fn TIMESTAMPDIFF(SQL_TSI_SECOND, SHIFTS.STARTSHIFT, SHIFTS.ENDSHIFT)}) AS TOTAL " +
+                "((DATE_PART('day', SHIFTS.ENDSHIFT - SHIFTS.STARTSHIFT) * 24 + " + 
+                "DATE_PART('hour', SHIFTS.ENDSHIFT - SHIFTS.STARTSHIFT)) * 60 + " +
+                "DATE_PART('minute', SHIFTS.ENDSHIFT - SHIFTS.STARTSHIFT)) * 60 + " +
+                "DATE_PART('second', SHIFTS.ENDSHIFT - SHIFTS.STARTSHIFT)  AS TOTAL " +
                 "FROM PEOPLE LEFT JOIN SHIFTS ON SHIFTS.PPLID = PEOPLE.ID " +
                 "WHERE ?(QBF_FILTER) ");
 

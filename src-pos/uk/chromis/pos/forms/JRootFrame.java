@@ -26,6 +26,7 @@ import java.rmi.RemoteException;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import uk.chromis.pos.config.JFrmConfig;
+import uk.chromis.pos.customerscreen.CustomerScreen;
 import uk.chromis.pos.instance.AppMessage;
 import uk.chromis.pos.instance.InstanceManager;
 import uk.chromis.pos.util.OSValidator;
@@ -43,6 +44,8 @@ public class JRootFrame extends javax.swing.JFrame implements AppMessage {
     private AppProperties m_props;
     
     private OSValidator m_OS;
+    
+    private CustomerScreen customerScreen = new CustomerScreen();
     
     /** Creates new form JRootFrame */
     public JRootFrame() {
