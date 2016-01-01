@@ -37,13 +37,12 @@ public class CustomerScreen {
     private static final String COLUMN_NAMES[] = {"Item", "Price"};
     
     public CustomerScreen() {
-        
-        
         ticketTable = new JTable(tableData, COLUMN_NAMES);
         
         parseXMLStyle("custscreenimages/layout.xml");
         
         mainFrame.add(ticketTable, BorderLayout.CENTER);
+        mainFrame.setUndecorated(true);
         mainFrame.pack();
         mainFrame.setVisible(true);
     }
@@ -58,10 +57,12 @@ public class CustomerScreen {
         
         for (TicketLineInfo ticketline : ticket.getLines()) {
             tableData[ticketline.getTicketLine()][0] = ticketline.getProductName();
-            tableData[ticketline.getTicketLine()][1] = "$".concat(String.valueOf(ticketline.getValue()));
+            tableData[ticketline.getTicketLine()][1] = ticketline.printPriceTax();
         }
         
         ticketTable.setModel(new DefaultTableModel(tableData, COLUMN_NAMES));
+       
+        mainFrame.pack();
     }
     
     public static void parseXMLStyle(String filename) {
@@ -76,12 +77,18 @@ public class CustomerScreen {
             
             //Set table properties
             BorderLayout layout = new BorderLayout();
+            
+            if (!"customerscreen".equals(layoutxml.getRootElement().getName())) {
+                return;
+            }
 
+            ticketTable.setFont(ticketTable.getFont().deriveFont(Float.parseFloat(layoutxml.getRootElement().getAttributeValue("fontsize", "16"))));
+            ticketTable.getColumnModel().getColumn(1).setMaxWidth(
+                    Integer.parseInt(layoutxml.getRootElement().getAttributeValue("pricewidth", "250")));
+            ticketTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+            
             layout.setHgap(Integer.parseInt(layoutxml.getRootElement().getAttributeValue("border", "5")));
             layout.setVgap(Integer.parseInt(layoutxml.getRootElement().getAttributeValue("border", "5")));
-            
-            ticketTable.setFont(ticketTable.getFont().deriveFont(Integer.parseInt(layoutxml.getRootElement().getAttributeValue("fontsize", "16"))));
-             
             mainFrame.setLayout(layout);
 
             for (Object o : layoutxml.getRootElement().getChildren()) {
@@ -100,20 +107,12 @@ public class CustomerScreen {
                 }
             }
 
-        } catch (JDOMException ex) {
-            Logger.getLogger(CustomerScreen.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
+        } catch (JDOMException | IOException ex) {
             Logger.getLogger(CustomerScreen.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         
         
         
-    }
-
-    private static Object getValueOrDefault(Object value, Object defaultValue) {
-        System.out.println(value);
-        System.out.println(defaultValue);
-        return (value != null) ? value : defaultValue;
     }
 }
