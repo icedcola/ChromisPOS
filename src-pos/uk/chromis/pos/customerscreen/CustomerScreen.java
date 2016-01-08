@@ -6,6 +6,9 @@
 package uk.chromis.pos.customerscreen;
 
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -16,6 +19,7 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import org.jdom.Document;
@@ -32,16 +36,31 @@ import uk.chromis.pos.ticket.TicketLineInfo;
 public class CustomerScreen {
     
     private static JFrame mainFrame = new JFrame();
+    private static JPanel ticketPanel = new JPanel();
+    private static JPanel idlePanel = new JPanel();
+    private static JPanel cardLayoutPane = new JPanel();
+    private static CardLayout cardLayout = new CardLayout();
     private static JTable ticketTable;
     private static Object[][] tableData = new Object[1][2];
     private static final String COLUMN_NAMES[] = {"Item", "Price"};
+    
+    private static Integer priceColumnWidth = 250;
     
     public CustomerScreen() {
         ticketTable = new JTable(tableData, COLUMN_NAMES);
         
         parseXMLStyle("custscreenimages/layout.xml");
         
-        mainFrame.add(ticketTable, BorderLayout.CENTER);
+        ticketPanel.add(ticketTable, BorderLayout.CENTER);
+        
+        mainFrame.add(cardLayoutPane);
+        
+        cardLayoutPane.setLayout(cardLayout);
+        cardLayoutPane.add(ticketPanel, "ticketpanel");
+        cardLayoutPane.add(idlePanel, "idlepanel");
+        
+        cardLayout.show(cardLayoutPane, "idlepanel");
+        
         mainFrame.setUndecorated(true);
         mainFrame.pack();
         mainFrame.setVisible(true);
@@ -61,7 +80,14 @@ public class CustomerScreen {
         }
         
         ticketTable.setModel(new DefaultTableModel(tableData, COLUMN_NAMES));
-       
+        
+        if (ticket.getLines().isEmpty()) {
+            cardLayout.show(cardLayoutPane, "idlepanel");
+        } else {
+            cardLayout.show(cardLayoutPane, "ticketpanel");
+        }
+        ticketTable.getColumnModel().getColumn(1).setMaxWidth(priceColumnWidth);
+        ticketTable.repaint();
         mainFrame.pack();
     }
     
@@ -69,31 +95,54 @@ public class CustomerScreen {
         Document layoutxml;
         SAXBuilder builder = new SAXBuilder();
         File xmlFile = new File(filename);
-        
-        
-             
+
         try {
             layoutxml = builder.build(xmlFile);
             
             //Set table properties
-            BorderLayout layout = new BorderLayout();
-            
+            BorderLayout layoutTicketPanel = new BorderLayout();
+            BorderLayout layoutIdlePanel = new BorderLayout();
+            Integer border = 0;
+
             if (!"customerscreen".equals(layoutxml.getRootElement().getName())) {
                 return;
             }
 
             ticketTable.setFont(ticketTable.getFont().deriveFont(Float.parseFloat(layoutxml.getRootElement().getAttributeValue("fontsize", "16"))));
-            ticketTable.getColumnModel().getColumn(1).setMaxWidth(
-                    Integer.parseInt(layoutxml.getRootElement().getAttributeValue("pricewidth", "250")));
+            
+            priceColumnWidth = Integer.parseInt(layoutxml.getRootElement().getAttributeValue("pricewidth", "250"));
+            ticketTable.getColumnModel().getColumn(1).setMaxWidth(priceColumnWidth);
             ticketTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
             
-            layout.setHgap(Integer.parseInt(layoutxml.getRootElement().getAttributeValue("border", "5")));
-            layout.setVgap(Integer.parseInt(layoutxml.getRootElement().getAttributeValue("border", "5")));
-            mainFrame.setLayout(layout);
+            border = Integer.parseInt(layoutxml.getRootElement().getAttributeValue("border", "5"));
+            
+            layoutTicketPanel.setHgap(border);
+            layoutTicketPanel.setVgap(border);
+            layoutIdlePanel.setHgap(border);
+            layoutIdlePanel.setVgap(border);
+            ticketPanel.setLayout(layoutTicketPanel);
+            idlePanel.setLayout(layoutIdlePanel);
+            
+            if ("true".equals(layoutxml.getRootElement().getAttributeValue("fullscreen", "false"))) {
+                GraphicsDevice[] gs = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
+                gs[Integer.parseInt(layoutxml.getRootElement().getAttributeValue("screenid", "1"))].setFullScreenWindow(mainFrame);
+            }
 
-            for (Object o : layoutxml.getRootElement().getChildren()) {
-                Element e = (Element) o;
-                if ("imagefile".equals(e.getName())) {
+            parseXMLPanel(ticketPanel, layoutxml.getRootElement().getChild("ticketscreen"));
+            parseXMLPanel(idlePanel, layoutxml.getRootElement().getChild("idlescreen"));
+
+        } catch (JDOMException | IOException ex) {
+            Logger.getLogger(CustomerScreen.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private static void parseXMLPanel(JPanel panel, Element rootElement) {
+
+        for (Object o : rootElement.getChildren()) {
+            Element e = (Element) o;
+
+            if ("imagefile".equals(e.getName())) {
+                try {
                     BufferedImage image = ImageIO.read(new File(e.getText()));
 
                     //Scale image, if the user doesn't give either width or height
@@ -103,16 +152,13 @@ public class CustomerScreen {
                             Integer.parseInt(e.getAttributeValue("width", "-1")),
                             Integer.parseInt(e.getAttributeValue("height", "-1")),
                             Image.SCALE_SMOOTH)));
-                    mainFrame.add(imageLabel, e.getAttributeValue("position", BorderLayout.PAGE_START));
+                    panel.add(imageLabel, e.getAttributeValue("position", BorderLayout.PAGE_START));
+                } catch (IOException ex) {
+                    Logger.getLogger(CustomerScreen.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
 
-        } catch (JDOMException | IOException ex) {
-            Logger.getLogger(CustomerScreen.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        
-        
-        
+
     }
 }
