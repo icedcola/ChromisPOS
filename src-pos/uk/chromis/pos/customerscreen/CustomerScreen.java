@@ -21,6 +21,9 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTable;
+import javax.swing.Timer;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import org.jdom.Document;
 import org.jdom.Element;
@@ -28,12 +31,13 @@ import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
 import uk.chromis.pos.ticket.TicketInfo;
 import uk.chromis.pos.ticket.TicketLineInfo;
+import uk.chromis.pos.sales.JPanelTicket;
 
 /**
  *
  * @author User
  */
-public class CustomerScreen {
+public class CustomerScreen implements ListSelectionListener {
     
     private static JFrame mainFrame = new JFrame();
     private static JPanel ticketPanel = new JPanel();
@@ -43,12 +47,16 @@ public class CustomerScreen {
     private static JTable ticketTable;
     private static Object[][] tableData = new Object[1][2];
     private static final String COLUMN_NAMES[] = {"Item", "Price"};
+    private JPanelTicket pairedTicketPanel;
+    private Timer timer;
     
     private static Integer priceColumnWidth = 250;
     
-    public CustomerScreen() {
-        ticketTable = new JTable(tableData, COLUMN_NAMES);
+    public CustomerScreen(JPanelTicket pairedticketPanel) {
+        this.pairedTicketPanel = pairedticketPanel;
         
+        ticketTable = new JTable(tableData, COLUMN_NAMES);
+        mainFrame.setUndecorated(false);
         parseXMLStyle("custscreenimages/layout.xml");
         
         ticketPanel.add(ticketTable, BorderLayout.CENTER);
@@ -61,7 +69,6 @@ public class CustomerScreen {
         
         cardLayout.show(cardLayoutPane, "idlepanel");
         
-        mainFrame.setUndecorated(true);
         mainFrame.pack();
         mainFrame.setVisible(true);
     }
@@ -80,15 +87,18 @@ public class CustomerScreen {
         }
         
         ticketTable.setModel(new DefaultTableModel(tableData, COLUMN_NAMES));
-        
+
         if (ticket.getLines().isEmpty()) {
             cardLayout.show(cardLayoutPane, "idlepanel");
         } else {
             cardLayout.show(cardLayoutPane, "ticketpanel");
         }
+        
         ticketTable.getColumnModel().getColumn(1).setMaxWidth(priceColumnWidth);
         ticketTable.repaint();
+        
         mainFrame.pack();
+        
     }
     
     public static void parseXMLStyle(String filename) {
@@ -160,5 +170,10 @@ public class CustomerScreen {
 
         }
 
+    }
+
+    @Override
+    public void valueChanged(ListSelectionEvent e) {
+        setTicket(pairedTicketPanel.getActiveTicket());
     }
 }
