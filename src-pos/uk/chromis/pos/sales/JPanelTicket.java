@@ -94,6 +94,7 @@ import uk.chromis.pos.util.ReportUtils;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.ListSelectionEvent;
 import uk.chromis.data.gui.JMessageDialog;
+import uk.chromis.pos.customerscreen.CustomerScreen;
 import uk.chromis.pos.printer.DeviceDisplayAdvance;
 import uk.chromis.pos.printer.DeviceTicket;
 import uk.chromis.pos.ticket.TicketType;
@@ -167,6 +168,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
     private TicketInfo m_ticketCopy;
     private AppConfig m_config;
     private PromotionSupport m_promotionSupport = null;
+    
+    private CustomerScreen customerScreen = null;
 
     public JPanelTicket() {
         initComponents();
@@ -230,6 +233,14 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
         autoLogoffToTables = AppConfig.getInstance().getBoolean("till.autologofftotables");
         autoLogoffAfterKitchen = AppConfig.getInstance().getBoolean("till.autologoffafterkitchen");
 
+        /*
+        Matt's customer display
+        */
+        if (customerScreen == null) {
+            customerScreen = new CustomerScreen(this);
+            m_ticketlines.addListSelectionListener(customerScreen);
+        }
+        
         /*
         Code to drive full screen display
          */
