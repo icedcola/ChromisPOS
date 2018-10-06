@@ -1,0 +1,17 @@
+<customerscreen fullscreen="false" border="5" screenid="0" fontsize="25" pricewidth="300" startx="1450" starty="10">
+
+<ticketscreen>
+
+<imagefile position="First" width="1200">custscreenimages/banner.png</imagefile>
+
+<imagefile position="After">custscreenimages/sidebar.png</imagefile>
+
+</ticketscreen>
+
+<idlescreen>
+
+<imagefile position="Center" width="1200">custscreenimages/infoscreen.png</imagefile>
+
+</idlescreen>
+
+</customerscreen>

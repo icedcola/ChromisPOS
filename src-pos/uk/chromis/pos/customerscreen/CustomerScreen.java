@@ -56,7 +56,7 @@ public class CustomerScreen implements ListSelectionListener {
         this.pairedTicketPanel = pairedticketPanel;
         
         ticketTable = new JTable(tableData, COLUMN_NAMES);
-        mainFrame.setUndecorated(false);
+        mainFrame.setUndecorated(true);
         parseXMLStyle("custscreenimages/layout.xml");
         
         ticketPanel.add(ticketTable, BorderLayout.CENTER);
@@ -79,6 +79,11 @@ public class CustomerScreen implements ListSelectionListener {
     }
     
     public static void setTicket(TicketInfo ticket) {
+        if (ticket == null) {
+            cardLayout.show(cardLayoutPane, "idlepanel");
+            return;
+        }
+        
         tableData = new Object[(ticket.getLinesCount())][2];
         
         for (TicketLineInfo ticketline : ticket.getLines()) {
@@ -95,6 +100,7 @@ public class CustomerScreen implements ListSelectionListener {
         }
         
         ticketTable.getColumnModel().getColumn(1).setMaxWidth(priceColumnWidth);
+        ticketTable.getColumnModel().getColumn(1).setMinWidth(priceColumnWidth);
         ticketTable.repaint();
         
         mainFrame.pack();
@@ -123,6 +129,9 @@ public class CustomerScreen implements ListSelectionListener {
             priceColumnWidth = Integer.parseInt(layoutxml.getRootElement().getAttributeValue("pricewidth", "250"));
             ticketTable.getColumnModel().getColumn(1).setMaxWidth(priceColumnWidth);
             ticketTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+            
+            mainFrame.setLocation(Integer.parseInt(layoutxml.getRootElement().getAttributeValue("startx", "0")),
+                    Integer.parseInt(layoutxml.getRootElement().getAttributeValue("starty", "0")));
             
             border = Integer.parseInt(layoutxml.getRootElement().getAttributeValue("border", "5"));
             
